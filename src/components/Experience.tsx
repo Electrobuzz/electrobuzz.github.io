@@ -7,6 +7,14 @@ const Experience = () => {
 
   const experiences = [
     {
+      year: 'July, 2026',
+      title: 'Incoming Associate',
+      organization: 'PwC',
+      bullets: [
+        
+      ]
+    },
+    {
       year: 'May, 2025',
       title: 'Advanced Application Analyst',
       organization: 'Accenture',

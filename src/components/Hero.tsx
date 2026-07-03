@@ -7,7 +7,7 @@ const Hero = () => {
     { icon: Github, href: 'https://github.com/electrobuzz', label: 'GitHub' },
     { icon: Linkedin, href: 'https://www.linkedin.com/in/raman-verma-88520024b/', label: 'LinkedIn' },
     { icon: Mail, href: 'mailto:ramanverma10010@gmail.com', label: 'Email' },
-    { icon: Trophy, href: 'https://codeforces.com/profile/wolfrahh', label: 'Codeforces' },
+    // { icon: Trophy, href: 'https://codeforces.com/profile/wolfrahh', label: 'Codeforces' },
   ];
 
   return (

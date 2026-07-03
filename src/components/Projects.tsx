@@ -7,39 +7,27 @@ const Projects = () => {
   const { ref, isVisible } = useIntersectionObserver(0.1);
   const projects = [
     {
-      title: 'High-Frequency Trading System',
-      description: 'Built a low-latency trading engine with real-time market data processing and order execution.',
-      tech: ['C++', 'Python', 'Redis', 'WebSocket'],
+      title: 'Portfolio Risk Analytics Engine',
+      description: 'A comprehensive market risk analytics engine for multi-asset portfolios, featuring VaR modeling, backtesting, stress testing, and automated reporting.',
+      tech: ['Python', 'Pandas', 'yfinance', 'scipy'],
       bullets: [
-        'Processed 10,000+ messages/second with sub-millisecond latency',
-        'Reduced order execution time by 40% through optimization',
-        'Implemented custom memory management for zero-copy operations'
+        'Implemented five Value-at-Risk models using real market data.',
+        'Automated risk attribution, backtesting, stress testing, and reporting',
+        'Validated models across historical crises and market stress scenarios.'
       ],
-      github: 'https://github.com/wolfrahh/trading-system',
+      github: 'https://github.com/Electrobuzz/Portfolio-Risk-Analytics-Engine',
       demo: null
     },
     {
-      title: 'Distributed File System',
-      description: 'Created a scalable distributed storage system with data replication and consistency guarantees.',
-      tech: ['Go', 'Raft', 'gRPC', 'Docker'],
+      title: 'Cross-Asset Analytics Platform',
+      description: 'A cross-asset analytics platform for options pricing, fixed-income risk, and scenario analysis.',
+      tech: ['Python', 'Pandas', 'NumPy', 'scipy'],
       bullets: [
-        'Achieved 99.9% availability across 5-node cluster',
-        'Handled 1TB+ data with automatic sharding',
-        'Implemented strong consistency using Raft consensus'
+        'Built options pricing models and fixed-income risk metrics',
+        'Implemented scenario analysis and stress testing frameworks',
+        'Developed automated reporting and visualization pipelines'
       ],
-      github: 'https://github.com/wolfrahh/distributed-fs',
-      demo: null
-    },
-    {
-      title: 'Parallel Graph Algorithms',
-      description: 'Optimized graph algorithms for multi-core systems using MPI and OpenMP.',
-      tech: ['C++', 'MPI', 'OpenMP', 'CUDA'],
-      bullets: [
-        'Accelerated Dijkstra\'s algorithm by 8x on 16 cores',
-        'Processed graphs with 10M+ edges efficiently',
-        'Won best performance award in HPC competition'
-      ],
-      github: 'https://github.com/wolfrahh/parallel-graphs',
+      github: 'https://github.com/Electrobuzz/greeks_dashboard',
       demo: null
     },
     {
@@ -52,6 +40,18 @@ const Projects = () => {
         'Developed CLI and Volcano-style iterator execution framework'
       ],
       github: 'https://github.com/Electrobuzz/CS315',
+      demo: null
+    },
+    {
+      title: 'Neural Machine Translation',
+      description: 'End-to-end multilingual Neural Machine Translation built from scratch.',
+      tech: ['Python', 'PyTorch'],
+      bullets: [
+        'Built multilingual Transformer translation system entirely from scratch using PyTorch',
+        'Engineered custom tokenizer, accelerating training eightfold while improving translation quality',
+        'Outperformed recurrent baselines fourfold with custom multilingual Transformer architecture'
+      ],
+      github: 'https://github.com/Electrobuzz/Neural-Machine-Translator-CS779',
       demo: null
     }
   ];

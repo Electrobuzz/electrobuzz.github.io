@@ -6,41 +6,42 @@ const Blog = () => {
   const { ref, isVisible } = useIntersectionObserver(0.1);
   const blogPosts = [
     {
-      title: 'Understanding MPI for Parallel Computing',
+      title: 'Cracking the ML PUF',
       date: '2024-12-15',
       description: 'Deep dive into Message Passing Interface and its applications in high-performance computing.',
       link: '#'
-    },
-    {
-      title: 'Optimizing Dijkstra for Large Graphs',
-      date: '2024-11-28',
-      description: 'Advanced techniques for optimizing shortest path algorithms on massive graph datasets.',
-      link: '#'
-    },
-    {
-      title: 'Lessons from Running Simulations on PARAM',
-      date: '2024-10-10',
-      description: 'Practical insights from running large-scale simulations on India\'s supercomputer.',
-      link: '#'
-    },
-    {
-      title: 'Probability Techniques for Quant Interviews',
-      date: '2024-09-22',
-      description: 'Essential probability concepts and problem-solving strategies for quantitative finance interviews.',
-      link: '#'
-    },
-    {
-      title: 'Low-Latency Systems Design Patterns',
-      date: '2024-08-15',
-      description: 'Design patterns and architectural principles for building ultra-low latency applications.',
-      link: '#'
-    },
-    {
-      title: 'Memory Management in C++ for HPC',
-      date: '2024-07-30',
-      description: 'Advanced memory management techniques for high-performance C++ applications.',
-      link: '#'
     }
+    ,
+    // {
+    //   title: 'Optimizing Dijkstra for Large Graphs',
+    //   date: '2024-11-28',
+    //   description: 'Advanced techniques for optimizing shortest path algorithms on massive graph datasets.',
+    //   link: '#'
+    // },
+    // {
+    //   title: 'Lessons from Running Simulations on PARAM',
+    //   date: '2024-10-10',
+    //   description: 'Practical insights from running large-scale simulations on India\'s supercomputer.',
+    //   link: '#'
+    // },
+    // {
+    //   title: 'Probability Techniques for Quant Interviews',
+    //   date: '2024-09-22',
+    //   description: 'Essential probability concepts and problem-solving strategies for quantitative finance interviews.',
+    //   link: '#'
+    // },
+    // {
+    //   title: 'Low-Latency Systems Design Patterns',
+    //   date: '2024-08-15',
+    //   description: 'Design patterns and architectural principles for building ultra-low latency applications.',
+    //   link: '#'
+    // },
+    // {
+    //   title: 'Memory Management in C++ for HPC',
+    //   date: '2024-07-30',
+    //   description: 'Advanced memory management techniques for high-performance C++ applications.',
+    //   link: '#'
+    // }
   ];
 
   const formatDate = (dateString: string) => {

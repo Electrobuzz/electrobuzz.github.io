@@ -9,7 +9,7 @@ const Blog = () => {
       title: 'Cracking the ML PUF',
       date: '2024-12-15',
       description: 'Deep dive into Message Passing Interface and its applications in high-performance computing.',
-      link: '#'
+      link: 'https://drive.google.com/file/d/17d2U8LFxepysgnHyX3XdcV0yx7Ro0Mvz/view?usp=sharing'
     }
     ,
     // {

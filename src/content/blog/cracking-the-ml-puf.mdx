@@ -15,7 +15,7 @@ If you've never met a PUF before, here's the one-sentence version: it's a circui
 
 Spoiler: it doesn't help nearly as much as you'd hope. Here's why.
 
-> *[Image placeholder: simple diagram of two arbiter PUF delay-race circuits feeding into an XOR gate to form the ML-PUF]*
+![Simple diagram of two arbiter PUF delay-race circuits feeding into an XOR gate to form the ML-PUF~](/blog_images/MLPUF.png)
 
 ## Part 1: Turning Delay Races Into a Linear Model
 
@@ -73,7 +73,7 @@ $$
 
 That's the whole punchline of Part 1: an XOR of two arbiter PUFs, which looks like a fundamentally nonlinear, "combinatorially harder" object, is still just a linear model — you just need to lift your features into a higher-dimensional space first (in this case, all pairwise products of the original 15-dimensional delay features).
 
-> *[Image placeholder: visual showing the feature vector φ(z) being outer-producted with itself to form the lifted feature space]*
+<!--> *[Image placeholder: visual showing the feature vector φ(z) being outer-producted with itself to form the lifted feature space]*-->
 
 ## Part 2: How Big Does That Feature Space Need to Be?
 
@@ -129,7 +129,7 @@ and the model weights are $w_0 = \alpha_0$, $w_i = \alpha_i + \beta_{i-1}$ for $
 
 Stack all of this into a single system: 256 unknown delays ($p, q, r, s$ — 64 each) and 65 known equations (the 64 weights plus the bias). This gives a sparse linear system $Ax = b$, where $A \in \mathbb{R}^{65 \times 256}$ is built directly from the coefficient structure above (every row is mostly zeros, with a handful of $\pm 0.5$ entries encoding which delays contribute to that particular weight).
 
-> *[Image placeholder: sparsity pattern / heatmap of the matrix A showing the diagonal-band structure]*
+<!--> *[Image placeholder: sparsity pattern / heatmap of the matrix A showing the diagonal-band structure]*-->
 
 Since the system is **underdetermined** (256 unknowns, only 65 equations) but delays must be physically non-negative, this becomes a constrained optimization problem:
 
@@ -150,7 +150,7 @@ With a learning rate of $\eta = 10^{-2}$, a tolerance of $\epsilon = 10^{-6}$, a
 
 All of this theory is nice, but which off-the-shelf linear classifier should you actually reach for once you've built your 105-dimensional feature space? The assignment compares three candidates — **LinearSVC**, **LogisticRegression**, and **RidgeClassifier** — across a grid of hyperparameters: loss function (hinge vs. squared hinge), regularization strength $C$ (0.01, 0.1, 10), convergence tolerance ($10^{-3}$ to $10^{1}$), and penalty type (L1 vs. L2).
 
-> *[Image placeholder: accuracy vs. tolerance line chart comparing LinearSVC and LogisticRegression]*
+<!--> *[Image placeholder: accuracy vs. tolerance line chart comparing LinearSVC and LogisticRegression]*-->
 
 A few clear patterns emerged from the sweep:
 

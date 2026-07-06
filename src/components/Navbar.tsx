@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Github, Linkedin, Mail } from 'lucide-react';
+import Link from 'next/link';
 
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState('hero');
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const sections = ['hero', 'about', 'experience', 'projects', 'blog'];
+  const sections = ['hero', 'about', 'experience', 'projects'];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,7 +55,7 @@ const Navbar = () => {
 
           {/* Center Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {['About', 'Experience', 'Projects', 'Blog'].map((item) => {
+            {['About', 'Experience', 'Projects'].map((item) => {
               const sectionId = item.toLowerCase();
               return (
                 <button
@@ -73,6 +74,12 @@ const Navbar = () => {
                 </button>
               );
             })}
+            <Link
+              href="/blog"
+              className="relative text-sm font-medium transition-colors duration-200 text-[#e6edf3] hover:text-[#58a6ff]"
+            >
+              Blog
+            </Link>
           </div>
 
           {/* Brand Name - Right */}
@@ -84,7 +91,7 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <div className="md:hidden mt-4 pt-4 border-t border-gray-800">
           <div className="flex justify-around">
-            {['About', 'Experience', 'Projects', 'Blog'].map((item) => {
+            {['About', 'Experience', 'Projects'].map((item) => {
               const sectionId = item.toLowerCase();
               return (
                 <button
@@ -100,6 +107,12 @@ const Navbar = () => {
                 </button>
               );
             })}
+            <Link
+              href="/blog"
+              className="text-xs font-medium transition-colors duration-200 text-[#e6edf3] hover:text-[#58a6ff]"
+            >
+              Blog
+            </Link>
           </div>
         </div>
       </div>

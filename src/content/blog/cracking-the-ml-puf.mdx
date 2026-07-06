@@ -1,0 +1,173 @@
+---
+title: "Cracking the ML-PUF: How a \"Non-Linear\" Security Device Falls to a Linear Model"
+date: 2026-07-03
+description: Using machine learning to attack Arbiter PUFs.
+tags:
+    - Security
+    - Machine Learning
+    - Hardware
+published: true
+---
+
+Let's talk about something that sounds like it shouldn't be breakable with something as simple as a straight line — and yet, it is. This is the story of the ML-PUF (Multiplexer/Multi-Level Physically Unclonable Function), a hardware security primitive that's supposed to be unpredictable, and how a bit of careful algebra turns it into something a linear classifier can learn in milliseconds.
+
+If you've never met a PUF before, here's the one-sentence version: it's a circuit that exploits tiny, uncontrollable manufacturing variations in silicon to produce a response that's (in theory) unique and hard to clone. An **Arbiter PUF** does this with two parallel delay paths racing against each other — whichever signal reaches the finish line first sets the output bit. An **ML-PUF** ups the ante by XOR-ing the outputs of two Arbiter PUFs together, hoping that XOR-ing two "unpredictable" signals makes the result even harder to model.
+
+Spoiler: it doesn't help nearly as much as you'd hope. Here's why.
+
+> *[Image placeholder: simple diagram of two arbiter PUF delay-race circuits feeding into an XOR gate to form the ML-PUF]*
+
+## Part 1: Turning Delay Races Into a Linear Model
+
+The core physical quantity in an Arbiter PUF is *delay* — how long it takes a signal to traverse each stage of the circuit. At every stage $i$, the challenge bit $z_i$ decides whether the upper and lower signal paths swap or go straight through. If you write out the recurrence for the upper-path delay $t_i^u$ and the lower-path delay $t_i^l$, you get:
+
+$$
+t_i^u = (1 - z_i)\left(t_{i-1}^u + p_i\right) + z_i\left(t_{i-1}^l + s_i\right)
+$$
+
+$$
+t_i^l = (1 - z_i)\left(t_{i-1}^l + q_i\right) + z_i\left(t_{i-1}^u + r_i\right)
+$$
+
+where $p_i, q_i, r_i, s_i$ are the four physical delay parameters at stage $i$ (they capture "delay if the signal goes straight" vs. "delay if it crosses over").
+
+At first glance this looks hopelessly recursive — each stage's delay depends on the previous stage's delay, which depends on the one before that, and so on. But here's the trick: if you define a *delay-difference* term $\Delta_i$ and expand the recursion all the way down to the base case, the nested dependencies collapse into a clean linear sum:
+
+$$
+\Delta_i = \sum_{j=1}^{i} w_j x_{ji} + b_i
+$$
+
+where the $x$ terms are just products of the sign-flip factors $(1 - 2z_r)$. In other words — even though each stage's delay looks like it multiplies and folds into the next one, the *total* delay at the final stage is a weighted sum of transformed challenge-bit terms.
+
+That transformation — turning $z \in \{0,1\}^8$ into a vector of these cumulative products — is the feature map $\phi(z)$. Once you have it, the total time for the upper signal to reach the finish line becomes:
+
+$$
+t^u(z) = W^T \phi(z) + b
+$$
+
+That's just a linear model. A dot product and a bias. All the "chaos" of the recursive delay race has been absorbed into the feature map, and the actual prediction is linear in the transformed features.
+
+## Modeling the Full ML-PUF Output
+
+An Arbiter PUF's actual output bit isn't the delay itself — it's the *sign* of the delay difference between the two paths (whichever path "wins" the race). So each of the two arbiter PUFs inside the ML-PUF gives you a delay difference:
+
+$$
+\Delta_0(z) = W_0^T \tilde{\phi}(z), \qquad \Delta_1(z) = W_1^T \tilde{\phi}(z)
+$$
+
+(here $\tilde{\phi}$ is just $\phi$ with a constant $1$ appended, so the bias gets folded into the weight vector).
+
+The ML-PUF response is the XOR of the two individual PUF outputs, which — in sign-function terms — comes out to a *product* of the two sign functions rather than a sum. That's the crux of the difficulty: XOR-ing two things that are each "sign of a linear function" gives you something that depends on the *product* $\Delta_0(z) \cdot \Delta_1(z)$, which is quadratic, not linear, in the original feature space.
+
+The fix is elegant: if $\Delta_0$ and $\Delta_1$ are each linear in $\tilde{\phi}(z)$, then their product is linear in the **outer product** $\tilde{\phi}(z)\tilde{\phi}(z)^T$. So we define a new, "lifted" feature vector:
+
+$$
+\tilde{\phi}'(z) = \text{vec}\left(\tilde{\phi}(z)\tilde{\phi}(z)^T\right)
+$$
+
+and suddenly there exists a single weight vector $\tilde{W}$ such that:
+
+$$
+r(z) = \frac{1 + \text{sign}\left(\tilde{W}^T \tilde{\phi}'(z)\right)}{2}
+$$
+
+That's the whole punchline of Part 1: an XOR of two arbiter PUFs, which looks like a fundamentally nonlinear, "combinatorially harder" object, is still just a linear model — you just need to lift your features into a higher-dimensional space first (in this case, all pairwise products of the original 15-dimensional delay features).
+
+> *[Image placeholder: visual showing the feature vector φ(z) being outer-producted with itself to form the lifted feature space]*
+
+## Part 2: How Big Does That Feature Space Need to Be?
+
+Once you've decided to represent the ML-PUF as a linear model over $\tilde{\phi}(z)\tilde{\phi}(z)^T$, the natural next question is: how many dimensions does that actually require?
+
+The original feature vector $\tilde{\phi}(z)$ (after appending the constant term) lives in $\mathbb{R}^{15}$. Its outer product $\tilde{\phi}\tilde{\phi}^T$ is a $15 \times 15$ matrix — which naively has 225 entries. But that matrix is symmetric (since $\tilde{\phi}\tilde{\phi}^T = (\tilde{\phi}\tilde{\phi}^T)^T$), so you only need the upper (or lower) triangle, including the diagonal. That number of independent entries is:
+
+$$
+D = \frac{15 \times 16}{2} = 120
+$$
+
+After accounting for one structurally redundant term that always evaluates to zero (a sum with no terms in it, coming from the way the feature map is constructed), the effective dimensionality lands at:
+
+$$
+D = 105
+$$
+
+So: a 105-dimensional linear model is *exactly* enough to represent any ML-PUF built from two 8-bit-challenge Arbiter PUFs. That's a strikingly small number for something that "shouldn't" be linearly predictable at all.
+
+## Part 3: Skipping the Feature Engineering with Kernel SVMs
+
+Deriving that 105-dimensional feature map by hand was satisfying, but it's also a lot of work, and it's specific to this exact PUF architecture. What if we didn't want to hand-derive $\tilde{\phi}(z)$ at all, and instead just fed the raw 8-bit challenge vector into an SVM?
+
+This is where kernel methods earn their keep. The whole point of a kernel is that it lets you operate *as if* you'd mapped your data into some high-dimensional feature space, without ever explicitly constructing that space — the kernel function computes the equivalent of an inner product in that space directly from the original inputs.
+
+Since we know the ML-PUF's linear model lives in the space of **pairwise products** of transformed features, we need a kernel that can implicitly represent second-order interactions between the input bits. The natural choice is the polynomial kernel of degree 2:
+
+$$
+K(c_i, c_j) = \left(\langle c_i, c_j \rangle + \text{coef}_0\right)^2
+$$
+
+Expanding this out gives you exactly the ingredients you need:
+
+$$
+K(c_i, c_j) = \langle c_i, c_j \rangle^2 + 2 \cdot \text{coef}_0 \cdot \langle c_i, c_j \rangle + \text{coef}_0^2
+$$
+
+This includes squared inner-product terms (capturing pairwise bit interactions), a linear term (capturing individual bit contributions), and a constant bias. That's precisely the same kind of information the hand-built $\tilde{\phi}(z)\tilde{\phi}(z)^T$ feature map was encoding — the kernel just computes it implicitly and efficiently via the kernel trick, without ever materializing a 105-dimensional vector.
+
+Recommended settings: **degree 2**, **coef0 = 1** (to make sure the bias/linear terms show up in the expansion), and gamma left at its default (or set to $1/8$, the number of features). With this, a kernel SVM trained directly on raw 8-bit challenges can achieve perfect classification of the ML-PUF response — no manual feature engineering required.
+
+## Part 4: Going the Other Direction — Recovering Physical Delays from Model Weights
+
+So far we've gone from *physical delays* → *linear model weights*. Part 4 asks us to go backwards: given a trained weight vector (say, 64 weights from a single Arbiter PUF), can we recover the actual underlying delay parameters?
+
+Recall that each weight is built from two delay-derived quantities, $\alpha_i$ and $\beta_i$:
+
+$$
+\alpha_i = \frac{p_i - q_i + r_i - s_i}{2}, \qquad \beta_i = \frac{p_i - q_i - r_i + s_i}{2}
+$$
+
+and the model weights are $w_0 = \alpha_0$, $w_i = \alpha_i + \beta_{i-1}$ for $i = 1, \dots, 63$, with the bias $b = \beta_{63}$. So each observed weight is really a *linear combination* of the four underlying delay values at one or two adjacent stages.
+
+Stack all of this into a single system: 256 unknown delays ($p, q, r, s$ — 64 each) and 65 known equations (the 64 weights plus the bias). This gives a sparse linear system $Ax = b$, where $A \in \mathbb{R}^{65 \times 256}$ is built directly from the coefficient structure above (every row is mostly zeros, with a handful of $\pm 0.5$ entries encoding which delays contribute to that particular weight).
+
+> *[Image placeholder: sparsity pattern / heatmap of the matrix A showing the diagonal-band structure]*
+
+Since the system is **underdetermined** (256 unknowns, only 65 equations) but delays must be physically non-negative, this becomes a constrained optimization problem:
+
+$$
+\min_{x \in \mathbb{R}^{256}} \|Ax - b\|_2^2 \quad \text{subject to} \quad x \geq 0
+$$
+
+There are several standard ways to attack this — direct linear solves, ordinary least squares, or ridge regression — but the more interesting route (and the one actually implemented) is a **custom projected gradient descent (PGD) solver**. The idea is simple: take a gradient step to reduce the squared error, then "project" the result back onto the feasible region by clipping any negative delay values to zero. Repeat until convergence:
+
+1. Start at $x_0 = 0$.
+2. Compute the gradient: $\nabla f(x) = 2A^T(Ax - b)$.
+3. Update with projection: $x_{k+1} = \max\left(x_k - \eta \nabla f(x_k),\ 0\right)$.
+4. Stop once $\|x_{k+1} - x_k\|_2 < \epsilon$, or after a fixed number of iterations.
+
+With a learning rate of $\eta = 10^{-2}$, a tolerance of $\epsilon = 10^{-6}$, and up to 1000 iterations, this recovers a physically valid (non-negative) set of 256 delay values consistent with the observed weight vector — effectively reverse-engineering plausible silicon-level timing parameters from a purely mathematical model.
+
+## Part 7: So Which Linear Classifier Actually Wins?
+
+All of this theory is nice, but which off-the-shelf linear classifier should you actually reach for once you've built your 105-dimensional feature space? The assignment compares three candidates — **LinearSVC**, **LogisticRegression**, and **RidgeClassifier** — across a grid of hyperparameters: loss function (hinge vs. squared hinge), regularization strength $C$ (0.01, 0.1, 10), convergence tolerance ($10^{-3}$ to $10^{1}$), and penalty type (L1 vs. L2).
+
+> *[Image placeholder: accuracy vs. tolerance line chart comparing LinearSVC and LogisticRegression]*
+
+A few clear patterns emerged from the sweep:
+
+- **RidgeClassifier** tops out around **86.7% accuracy** (at $\alpha = 10$), and its performance actually *degrades* as the regularization strength $\alpha$ increases — a sign that over-regularizing squashes out the genuine signal needed to separate the classes. It never reaches perfect accuracy, which suggests the least-squares-style objective just isn't as well-suited to this decision boundary as a margin- or likelihood-based method.
+- **LogisticRegression** and **LinearSVC** both manage to hit **perfect accuracy (1.0)** under the right hyperparameters — which makes sense, since we proved above that a genuinely linear decision boundary exists in the 105-dimensional lifted space. Once you're in the right feature space, this problem *is* linearly separable, so both hinge-loss and logistic-loss classifiers can, in principle, find it exactly.
+- Between the two perfect performers, **LinearSVC** consistently trains faster and predicts faster across most hyperparameter settings. The best configuration found was $C = 10$, L2 penalty, $\text{tol} = 10^{-1}$ — reaching perfect accuracy in about 1.28 seconds, versus roughly 3.7 seconds for the best LogisticRegression configuration.
+
+| Classifier | Accuracy | Train Time (s) | Map Time (s) | Model Size | Best Params |
+|---|---|---|---|---|---|
+| RidgeClassifier | 0.8668 | 0.5369 | 0.2259 | 105 | $\alpha = 10$, tol $= 10^{-4}$ |
+| LogisticRegression | 1.0 | 3.7004 | 0.2359 | 105 | $C = 10$, L2, tol $= 10^{-3}$ |
+| LinearSVC | 1.0 | 1.2835 | 0.2520 | 105 | $C = 10$, L2, tol $= 10^{-1}$ |
+
+**Bottom line:** if your feature engineering is correct, the exact choice of linear classifier matters less than getting the *feature space* right — but among the classifiers that can reach perfect accuracy here, LinearSVC is the more efficient choice.
+
+## The Big Picture
+
+Zoom out, and the real lesson of this assignment isn't really about arbiter delays or SVM hyperparameters — it's a broader point about linear models and feature engineering. A system can look arbitrarily nonlinear and "chaotic" on the surface — recursive delay races, XOR-ed outputs, cascading dependencies — and still be *exactly* linear once you find the right representation of the input. The ML-PUF's supposed unpredictability comes entirely from the fact that its natural inputs (raw challenge bits) aren't the right coordinates to see the linearity in. Transform into $\tilde{\phi}(z)\tilde{\phi}(z)^T$ space, or let a polynomial kernel do it implicitly, and the "hard" cryptographic primitive collapses into a completely standard linear classification problem — one that a plain LinearSVC can solve with 100% accuracy in about a second.
+
+That's the real takeaway: never assume something is "not linear" just because it isn't linear in the coordinates you were handed.

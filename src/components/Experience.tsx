@@ -7,11 +7,21 @@ const Experience = () => {
 
   const experiences = [
     {
-      year: 'July, 2026',
-      title: 'Incoming Associate',
-      organization: 'PwC',
+      year: 'Oct, 2026',
+      title: 'Rapid Application Developer',
+      organization: 'Millennium',
       bullets: [
         
+      ]
+    },
+    {
+      year: 'July, 2026',
+      title: 'Associate',
+      organization: 'PwC',
+      bullets: [
+        'Fixed 35-min Databricks ETL timeout on 300M+ GL rows by tracing Spark's single-task window bottleneck',
+        'Redesigned Parquet-to-Delta ingestion, cutting target writes 3→1; engineered collision-free 20-digit IDs for parallel 12B-row loads',
+        'Benchmarked DuckDB: 1.56x faster, 36% lower runtime, 34% less peak memory; validated across 4 repos and SAP/EBS/JDE pipelines'
       ]
     },
     {

@@ -49,9 +49,9 @@ const Experience = () => {
       title: 'Brain Research Consultant',
       organization: 'WorldQuant LLC',
       bullets: [
-        'Ran simulations on PARAM cluster with multi-core optimization',
-        'Optimized computational performance across multiple cores',
-        'Implemented parallel algorithms for scientific computing'
+        'Developed market-neutral signals using statistical risk models',
+        'Backtested anomaly-driven alpha strategies across global markets',
+        'Generated 80+ alphas, averaging 1.81 Sharpe and 21.18% annual returns'
       ]
     }
   ];
